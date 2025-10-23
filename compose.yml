@@ -1,0 +1,58 @@
+services:
+    php:
+        build: .
+        image: api-platform-frankenphp
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+            - "443:443/udp"
+        volumes:
+            - ./:/app
+            - caddy_data:/data
+            - caddy_config:/config
+        tty: true
+        networks:
+            - database_network
+
+    mysql:
+        env_file:
+            -   ".env.local"
+        image: mysql:8.0
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_USER: ${DOCKER_USER}
+            MYSQL_PASSWORD: ${DOCKER_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DOCKER_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${DOCKER_DATABASE}
+        volumes:
+            -   mysql_data_myrocket:/var/lib/mysql
+        networks:
+            - database_network
+
+    phpmyadmin:
+        env_file:
+            -   ".env.local"
+        image: phpmyadmin
+        ports:
+            - "8080:80"
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+            PMA_USER: ${DOCKER_USER}
+            PMA_PASSWORD: ${DOCKER_PASSWORD}
+            PMA_ARBITRARY: 1
+        networks:
+            - database_network
+
+volumes:
+    caddy_data:
+    caddy_config:
+    mysql_data_myrocket:
+
+networks:
+    database_network:
+        driver: bridge
+
+
